@@ -81,10 +81,12 @@ namespace mongo
     m_sock->recv(&reply);
     m_sock->recv(&reply);
     memcpy(&num_returned, (char*)reply.data() + 32, 4);
-    std::cout << num_returned << " documents returned" << std::endl;
-    bson::Element e;
-    e.decode((unsigned char*)reply.data() + 36, bson::DOCUMENT);
-    result = e.data<bson::Document>();
+    if (num_returned == 1)
+    {
+      bson::Element e;
+      e.decode((unsigned char*)reply.data() + 36, bson::DOCUMENT);
+      result = e.data<bson::Document>();
+    }
     return result;
     
   }
