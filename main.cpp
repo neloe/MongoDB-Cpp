@@ -1,4 +1,4 @@
-#include "connection/basic_connection.h"
+#include "connection/mongoclient.h"
 #include "bson/document.h"
 #include "bson/element.h"
 #include <iostream>
@@ -9,7 +9,8 @@
 using namespace std;
 int main()
 {
-  mongo::BasicConnection conn("localhost");
+  //mongo::BasicConnection conn("localhost");
+  mongo::MongoClient conn;
   bson::array pt = {-91.8, 37.5};
   //cout << conn.findOne("a.b") << endl;
   bson::Document squery, geo, geom, geomint, result, projection, tap, demo, query2;
@@ -29,7 +30,7 @@ int main()
   result = conn.findOne("esri.blockgroups", squery, projection);
   result["ID"].data(id);
   query2.add("ID",id);
-  std::cout << id << endl;
+  int count = 0;
   projection.add("ID", 0);
   
   using namespace std::chrono;
@@ -44,13 +45,18 @@ int main()
   {
     pair.first = f;
     pair.second = tap[f].data<std::string>();
+    count ++;
   }
+  cout << "Tapestry: " << count << endl;
+  count = 0;
   fields = demo.field_names();
   for (std::string f: fields)
   {
     pair.first = f;
     pair.second = demo[f].data<std::string>();
+    count ++;
   }
+  cout << "Demo: " << count << endl;
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
   duration<double> time_span = duration_cast<duration<double>>(t2 - t1);

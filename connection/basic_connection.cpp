@@ -80,7 +80,23 @@ namespace mongo
     }
     return;
   }
+  void BasicConnection::_kill_cursor(const long cursorID)
+  {
+    std::ostringstream kill;
+    _encode_header(kill, 16, KILL_CURSORS);
+    bson::Element::encode(kill, 0);
+    bson::Element::encode(kill, 1);
+    bson::Element::encode(kill, cursorID);
+    _msg_send(kill.str());
+  }
   
+  void BasicConnection::_encode_header(std::ostringstream&ss, const int size, const int type)
+  {
+    bson::Element::encode(ss, size + 16);
+    bson::Element::encode(ss, m_req_id++);
+    bson::Element::encode(ss, 0);
+    bson::Element::encode(ss, type);
+  }
   bson::Document BasicConnection::findOne(const std::string collection, const bson::Document query, 
 					  const bson::Document projection, const int flags, const int skip)
   {
@@ -101,13 +117,9 @@ namespace mongo
     bson::Element::encode(querystream, qd);
     if (projection.field_names().size() > 0)
       bson::Element::encode(querystream, projection);
-    bson::Element::encode(header, static_cast<int>(querystream.tellp()) + 16);
-    bson::Element::encode(header, m_req_id++);
-    bson::Element::encode(header, 0);
-    bson::Element::encode(header, 2004);
+    _encode_header(header, static_cast<int>(querystream.tellp()), QUERY);
     _msg_send(header.str() + querystream.str());
     _msg_recv(intro, data);
-
     if (intro.numRet == 1)
     {
       bson::Element e;
