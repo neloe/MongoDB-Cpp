@@ -7,7 +7,8 @@ add_subdirectory(bson)
 
 set (mongo_src
      main.cpp
-     connection/mongoclient.cpp)
+     connection/mongoclient.cpp
+     connection/cursor.cpp)
 
 add_executable(main ${mongo_src})
 

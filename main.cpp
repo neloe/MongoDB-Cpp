@@ -1,4 +1,5 @@
 #include "connection/mongoclient.h"
+#include "connection/cursor.h"
 #include "bson/document.h"
 #include "bson/element.h"
 #include <iostream>
@@ -63,5 +64,17 @@ int main()
 
   std::cout << "It took me " << time_span.count() << " seconds.";
   std::cout << std::endl;
+  /*
+  mongo::Cursor c = conn.find("esri.blockgroups");
+  int dcount = 0;
+  while (c.more())
+  {
+    dcount ++;
+    c.next();
+    if (!dcount & 1000)
+      cout << dcount << endl;
+  }
+  cout << dcount << endl;
+  */
   return 0;
 }
