@@ -5,6 +5,7 @@
  */
 
 #include "mongoclient.h"
+#include "cursor.h"
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -104,6 +105,25 @@ namespace mongo
     bson::Element::encode(ss, 0);
     bson::Element::encode(ss, type);
   }
+  
+  void MongoClient::_more_cursor(Cursor& c)
+  {
+    reply_pre intro;
+    std::ostringstream ss;
+    _encode_header(ss, 17 + c.m_coll.size(), GET_MORE);
+    bson::Element::encode(ss, 0);
+    ss << c.m_coll.c_str() << bson::X00;
+    bson::Element::encode(ss, 0);
+    bson::Element::encode(ss, c.m_id);
+    _msg_send(ss.str());
+    _msg_recv(intro, c.m_docs);
+    c.m_id = intro.curID;
+    c.m_strsize = intro.head.len - 36;
+    c.m_lastpos = 0;
+    return;
+  }
+
+  
   bson::Document MongoClient::findOne(const std::string collection, const bson::Document query, 
 					  const bson::Document projection, const int flags, const int skip)
   {
@@ -135,6 +155,33 @@ namespace mongo
     }
     return result;
     
+  }
+  
+  Cursor MongoClient::find(const std::string collection, const bson::Document query, 
+				   const bson::Document projection, const int flags, const int skip)
+  {
+    std::ostringstream querystream, header;
+    bson::Document qd;
+    zmq::message_t reply;
+    reply_pre intro;
+    int num_returned;
+    int docsize, headsize;
+    bson::Document result;
+    std::shared_ptr<unsigned char> data;
+    
+    qd.add("$query", query);
+    bson::Element::encode(querystream, flags);
+    querystream << collection.c_str() << bson::X00;
+    bson::Element::encode(querystream, skip);
+    bson::Element::encode(querystream, 0);
+    bson::Element::encode(querystream, qd);
+    if (projection.field_names().size() > 0)
+      bson::Element::encode(querystream, projection);
+    _encode_header(header, static_cast<int>(querystream.tellp()), QUERY);
+    _msg_send(header.str() + querystream.str());
+    _msg_recv(intro, data);
+    std::cout << "docs in reply: " << intro.numRet << std::endl;
+    return Cursor(intro.curID, data, intro.head.len - 36, collection, this);
   }
   
 }

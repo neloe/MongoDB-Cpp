@@ -12,13 +12,17 @@
 #include "../bson/document.h"
 #include "../bson/element.h"
 
+
+
 namespace mongo
 {
+  class Cursor;
+  
   class MongoClient
   {
     private:
       //Internal types and codes
-      
+      friend class Cursor;
       enum opcodes {REPLY=1, MSG=1000, UPDATE=2001, INSERT, RESERVED, QUERY, GET_MORE, DELETE, KILL_CURSORS};
       struct msg_header {int len, reqID, reTo, opCode;};
       struct reply_pre {msg_header head; int rFlags; long curID; int start, numRet;};
@@ -35,6 +39,7 @@ namespace mongo
       void _msg_recv(reply_pre & intro, std::shared_ptr<unsigned char> & docs);
       void _kill_cursor(const long cursorID);
       void _encode_header(std::ostringstream & ss, const int size, const int type);
+      void _more_cursor(Cursor & c);
     public:
       MongoClient(zmq::context_t * ctx = nullptr);
       MongoClient(zmq::context_t & ctx): MongoClient(&ctx) {}
@@ -47,6 +52,10 @@ namespace mongo
       bson::Document findOne(const std::string collection, const bson::Document query = bson::Document(), 
 			     const bson::Document projection = bson::Document(), const int flags = 0,
 			     const int skip = 0);
+      
+      Cursor find(const std::string collection, const bson::Document query = bson::Document(), 
+		  const bson::Document projection = bson::Document(), const int flags = 0,
+		  const int skip = 0);
       
       static std::shared_ptr<zmq::context_t> get_context() {return m_context;}
       static void set_context(zmq::context_t* ctx) {m_context = std::shared_ptr<zmq::context_t>(ctx);}
