@@ -9,8 +9,8 @@
 using namespace std;
 int main()
 {
-  //mongo::BasicConnection conn("localhost");
-  mongo::MongoClient conn;
+  mongo::MongoClient conn("localhost");
+  //mongo::MongoClient conn;
   bson::array pt = {-91.8, 37.5};
   //cout << conn.findOne("a.b") << endl;
   bson::Document squery, geo, geom, geomint, result, projection, tap, demo, query2;

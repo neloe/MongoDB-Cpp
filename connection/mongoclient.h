@@ -1,36 +1,55 @@
 /*!
- * \file mongoclient.h
+ * \file basic_connection.h
  * \author Nathan Eloe
- * \brief A mongo client that shares from a connection pool
+ * \brief Declaration of a basic, naive connection to the database
  */
 
 #pragma once
-
-#include "basic_connection.h"
-#include <map>
 #include <memory>
-#include <queue>
 #include <string>
 #include <zmq.hpp>
+
+#include "../bson/document.h"
+#include "../bson/element.h"
 
 namespace mongo
 {
   class MongoClient
   {
     private:
-      static std::map<std::string, std::queue<std::shared_ptr<BasicConnection>>> m_conn_pool;
-      static std::shared_ptr<zmq::context_t> m_context;
-      std::string m_connstr;
-      std::shared_ptr<BasicConnection> m_conn;
+      //Internal types and codes
       
+      enum opcodes {REPLY=1, MSG=1000, UPDATE=2001, INSERT, RESERVED, QUERY, GET_MORE, DELETE, KILL_CURSORS};
+      struct msg_header {int len, reqID, reTo, opCode;};
+      struct reply_pre {msg_header head; int rFlags; long curID; int start, numRet;};
+      const static size_t _ID_MAX_SIZE = 256;
+      static int m_req_id;
+      static std::shared_ptr<zmq::context_t> m_context;
+      static thread_local std::map<std::string, std::shared_ptr<zmq::socket_t>> m_socks;
+      
+      std::shared_ptr<zmq::socket_t>m_sock;
+      char m_id[_ID_MAX_SIZE];
+      size_t m_id_size;
+      
+      void _msg_send(std::string message);
+      void _msg_recv(reply_pre & intro, std::shared_ptr<unsigned char> & docs);
+      void _kill_cursor(const long cursorID);
+      void _encode_header(std::ostringstream & ss, const int size, const int type);
     public:
-      MongoClient(zmq::context_t * ctx, const std::string & host = "localhost", const std::string & port = "27017");
-      MongoClient(zmq::context_t & ctx, const std::string & host = "localhost", const std::string & port = "27017"): MongoClient(&ctx, host, port) {}
-      MongoClient(const std::string & host = "localhost", const std::string & port = "27017"): MongoClient(nullptr, host, port) {}
-      ~MongoClient() {m_conn_pool[m_connstr].push(m_conn);}
+      MongoClient(zmq::context_t * ctx = nullptr);
+      MongoClient(zmq::context_t & ctx): MongoClient(&ctx) {}
+      MongoClient(const std::string host, const std::string port = "27017", zmq::context_t * ctx = nullptr);
+      MongoClient(zmq::context_t & ctx, const std::string host, const std::string port = "27017"):MongoClient(host, port, &ctx) {}
+      ~MongoClient();
+      
+      void connect(const std::string host, const std::string port = "27017");
       
       bson::Document findOne(const std::string collection, const bson::Document query = bson::Document(), 
 			     const bson::Document projection = bson::Document(), const int flags = 0,
-			     const int skip = 0) {return m_conn -> findOne(collection, query, projection, flags, skip);}
+			     const int skip = 0);
+      
+      static std::shared_ptr<zmq::context_t> get_context() {return m_context;}
+      static void set_context(zmq::context_t* ctx) {m_context = std::shared_ptr<zmq::context_t>(ctx);}
+      static void set_context(zmq::context_t& ctx) {m_context = std::shared_ptr<zmq::context_t>(&ctx);}
   };
 }
