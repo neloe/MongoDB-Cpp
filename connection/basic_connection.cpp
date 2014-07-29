@@ -5,11 +5,13 @@
  */
 
 #include "basic_connection.h"
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <sstream>
 #include <zmq.hpp>
 #include "../bson/template_spec/convert_utils.h"
+#include <iostream>
 
 namespace mongo
 {
@@ -41,6 +43,11 @@ namespace mongo
     return;
   }
   
+  BasicConnection::~BasicConnection()
+  {
+
+  }
+  
   void BasicConnection::_msg_send(std::string message)
   {
     zmq::message_t send(message.size());
@@ -48,20 +55,43 @@ namespace mongo
     m_sock->send(m_id, m_id_size, ZMQ_SNDMORE);
     m_sock->send(send, ZMQ_SNDMORE);
   }
-  
-  BasicConnection::~BasicConnection()
+  void BasicConnection::_msg_recv(reply_pre & intro, std::shared_ptr<unsigned char> & docs)
   {
-
+    zmq::message_t id, reply;
+    int consumed, goal, size;
+    m_sock->recv(&id);
+    m_sock->recv(&reply);
+    memcpy(&(intro.head), (char*)reply.data(), 16);
+    memcpy(&(intro.rFlags), (char*)reply.data() + 16, 4);
+    memcpy(&(intro.curID), (char*)reply.data() + 20, 8);
+    memcpy(&(intro.start), (char*)reply.data() + 28, 4);
+    memcpy(&(intro.numRet), (char*)reply.data() + 32, 4);
+    goal = intro.head.len - 36;
+    docs = std::shared_ptr<unsigned char>(new unsigned char [intro.head.len - 36], []( unsigned char *p ) { delete[] p; });
+    memcpy(docs.get(), (char*)reply.data() + 36, reply.size() - 36);
+    consumed = reply.size() - 36;
+    while (consumed < goal)
+    {
+      zmq::message_t intid, intreply;
+      m_sock->recv(&intid);
+      m_sock->recv(&intreply);
+      memcpy(docs.get() + consumed, (char*)intreply.data(), std::min(static_cast<int>(intreply.size()), goal - consumed));
+      consumed += std::min(static_cast<int>(intreply.size()), goal - consumed);
+    }
+    return;
   }
-
+  
   bson::Document BasicConnection::findOne(const std::string collection, const bson::Document query, 
 					  const bson::Document projection, const int flags, const int skip)
   {
     std::ostringstream querystream, header;
     bson::Document qd;
     zmq::message_t reply;
+    reply_pre intro;
     int num_returned;
+    int docsize, headsize;
     bson::Document result;
+    std::shared_ptr<unsigned char> data;
     
     qd.add("$query", query);
     bson::Element::encode(querystream, flags);
@@ -76,15 +106,12 @@ namespace mongo
     bson::Element::encode(header, 0);
     bson::Element::encode(header, 2004);
     _msg_send(header.str() + querystream.str());
-    
-    //ignore this, I guess.  I don't know enough to know better
-    m_sock->recv(&reply);
-    m_sock->recv(&reply);
-    memcpy(&num_returned, (char*)reply.data() + 32, 4);
-    if (num_returned == 1)
+    _msg_recv(intro, data);
+
+    if (intro.numRet == 1)
     {
       bson::Element e;
-      e.decode((unsigned char*)reply.data() + 36, bson::DOCUMENT);
+      e.decode(data.get(), bson::DOCUMENT);
       result = e.data<bson::Document>();
     }
     return result;

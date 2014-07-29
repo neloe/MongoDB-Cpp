@@ -17,6 +17,9 @@ namespace mongo
   class BasicConnection
   {
     private:
+      
+      struct msg_header {int len, reqID, reTo, opCode;};
+      struct reply_pre {msg_header head; int rFlags; long curID; int start, numRet;};
       const static size_t _ID_MAX_SIZE = 256;
       static int m_req_id;
       static std::shared_ptr<zmq::context_t> m_context;
@@ -26,6 +29,7 @@ namespace mongo
       size_t m_id_size;
       
       void _msg_send(std::string message);
+      void _msg_recv(reply_pre & intro, std::shared_ptr<unsigned char> & docs);
     public:
       BasicConnection(zmq::context_t * ctx = nullptr);
       BasicConnection(zmq::context_t & ctx): BasicConnection(&ctx) {}
