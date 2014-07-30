@@ -60,7 +60,9 @@ namespace mongo
 		  const int skip = 0);
       
       void update(const std::string collection, const bson::Document selector, const bson::Document update,
-		  bool upsert = false, bool multi = false);
+		  const bool upsert = false, const bool multi = false);
+      
+      void insert(const std::string collection, const bson::Document toinsert);
       
       static std::shared_ptr<zmq::context_t> get_context() {return m_context;}
       static void set_context(zmq::context_t* ctx) {m_context = std::shared_ptr<zmq::context_t>(ctx);}

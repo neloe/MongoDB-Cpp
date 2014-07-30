@@ -191,9 +191,21 @@ namespace mongo
     bson::Element::encode(msg, 0);
     msg << collection.c_str() << bson::X00;
     bson::Element::encode(msg, static_cast<int>(upsert) | (static_cast<int>(multi)<<1));
+    bson::Element::encode(msg, selector);
+    bson::Element::encode(msg, update);
     _encode_header(header, static_cast<int>(msg.tellp(), UPDATE);
     _msg_send(header.str() + msg.str());
     return;
   }
   
+  void MongoClientinsert(const std::string collection, const bson::Document toinsert)
+  {
+    std::ostringstream msg, header;
+    bson::Element::encode(msg, 0);
+    msg << collection.c_str() << bson::X00;
+    bson::Element::encode(msg, toinsert);
+    _encode_header(header, static_cast<int>(msg.tellp(), UPDATE);
+    _msg_send(header.str() + msg.str());
+    return;
+  }
 }
