@@ -63,6 +63,7 @@ namespace mongo
 		  const bool upsert = false, const bool multi = false);
       
       void insert(const std::string collection, const bson::Document toinsert);
+      void remove(const std::string collection, const bson::Document selector, const bool rm_one=true);
       
       static std::shared_ptr<zmq::context_t> get_context() {return m_context;}
       static void set_context(zmq::context_t* ctx) {m_context = std::shared_ptr<zmq::context_t>(ctx);}

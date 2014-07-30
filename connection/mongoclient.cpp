@@ -193,18 +193,29 @@ namespace mongo
     bson::Element::encode(msg, static_cast<int>(upsert) | (static_cast<int>(multi)<<1));
     bson::Element::encode(msg, selector);
     bson::Element::encode(msg, update);
-    _encode_header(header, static_cast<int>(msg.tellp(), UPDATE);
+    _encode_header(header, static_cast<int>(msg.tellp()), UPDATE);
     _msg_send(header.str() + msg.str());
     return;
   }
   
-  void MongoClientinsert(const std::string collection, const bson::Document toinsert)
+  void MongoClient::insert(const std::string collection, const bson::Document toinsert)
   {
     std::ostringstream msg, header;
     bson::Element::encode(msg, 0);
     msg << collection.c_str() << bson::X00;
     bson::Element::encode(msg, toinsert);
-    _encode_header(header, static_cast<int>(msg.tellp(), UPDATE);
+    _encode_header(header, static_cast<int>(msg.tellp()), INSERT);
+    _msg_send(header.str() + msg.str());
+    return;
+  }
+  void MongoClient::remove(const std::string collection, const bson::Document selector, const bool rm_one)
+  {
+    std::ostringstream msg, header;
+    bson::Element::encode(msg, 0);
+    msg << collection.c_str() << bson::X00;
+    bson::Element::encode(msg, selector);
+    bson::Element::encode(msg, static_cast<int>(rm_one));
+    _encode_header(header, static_cast<int>(msg.tellp()), DELETE);
     _msg_send(header.str() + msg.str());
     return;
   }
