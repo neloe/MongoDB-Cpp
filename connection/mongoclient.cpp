@@ -184,4 +184,16 @@ namespace mongo
     return Cursor(intro.curID, data, intro.head.len - 36, collection, this);
   }
   
+  void MongoClient::update(const std::string collection, const bson::Document selector, const bson::Document update,
+			   const bool upsert, const bool multi)
+  {
+    std::ostringstream msg, header;
+    bson::Element::encode(msg, 0);
+    msg << collection.c_str() << bson::X00;
+    bson::Element::encode(msg, static_cast<int>(upsert) | (static_cast<int>(multi)<<1));
+    _encode_header(header, static_cast<int>(msg.tellp(), UPDATE);
+    _msg_send(header.str() + msg.str());
+    return;
+  }
+  
 }

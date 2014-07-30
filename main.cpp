@@ -37,14 +37,16 @@ int main()
   using namespace std::chrono;
 
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
-  result = conn.findOne("esri.blockgroups", query2, projection);
+  /*result = conn.findOne("esri.blockgroups", query2, projection);
   tap = result["tapestry"].data<bson::Document>();
   demo = result["demographics"].data<bson::Document>();
   std::pair<std::string, std::string> pair;
   std::set<std::string> fields = tap.field_names();
+  std::map<std::string, std::string> fields;
   for (std::string f: fields)
   {
-    pair.first = f;
+    
+    data.emplace(f, tap[j].data<std::string>());
     pair.second = tap[f].data<std::string>();
     count ++;
   }
@@ -58,23 +60,34 @@ int main()
     count ++;
   }
   cout << "Demo: " << count << endl;
-  high_resolution_clock::time_point t2 = high_resolution_clock::now();
-
-  duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
-
-  std::cout << "It took me " << time_span.count() << " seconds.";
-  std::cout << std::endl;
-  /*
+  */
+  std::map<std::string, std::string> fields;
   mongo::Cursor c = conn.find("esri.blockgroups");
   int dcount = 0;
   while (c.more())
   {
     dcount ++;
-    c.next();
-    if (!dcount & 1000)
-      cout << dcount << endl;
+    bson::Document d = c.next();
+    bson::Document tap = d["tapestry"].data<bson::Document>();
+    bson::Document demo = d["demographics"].data<bson::Document>();
+    for (std::string s: tap.field_names())
+    {
+      fields[s] = tap[s].data<std::string>();
+    }
+    for (std::string s: demo.field_names())
+    {
+      fields[s] = demo[s].data<std::string>();
+    }
   }
-  cout << dcount << endl;
+  
+  high_resolution_clock::time_point t2 = high_resolution_clock::now();
+
+  duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+
+  std::cout << dcount << " entries analyzed in " << time_span.count() << " seconds.";
+  std::cout << std::endl;
+  /*
+ 
   */
   return 0;
 }

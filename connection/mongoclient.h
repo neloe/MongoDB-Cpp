@@ -49,6 +49,8 @@ namespace mongo
       
       void connect(const std::string host, const std::string port = "27017");
       
+      // Database Operations
+      
       bson::Document findOne(const std::string collection, const bson::Document query = bson::Document(), 
 			     const bson::Document projection = bson::Document(), const int flags = 0,
 			     const int skip = 0);
@@ -56,6 +58,9 @@ namespace mongo
       Cursor find(const std::string collection, const bson::Document query = bson::Document(), 
 		  const bson::Document projection = bson::Document(), const int flags = 0,
 		  const int skip = 0);
+      
+      void update(const std::string collection, const bson::Document selector, const bson::Document update,
+		  bool upsert = false, bool multi = false);
       
       static std::shared_ptr<zmq::context_t> get_context() {return m_context;}
       static void set_context(zmq::context_t* ctx) {m_context = std::shared_ptr<zmq::context_t>(ctx);}
