@@ -78,8 +78,8 @@ namespace mongo
        * \pre None
        * \post constructs the client object and connects to the database
        */
-      MongoClient(const std::string host, const std::string port = "27017", zmq::context_t * ctx = nullptr);
-      MongoClient(zmq::context_t & ctx, const std::string host, const std::string port = "27017"):MongoClient(host, port, &ctx) {}
+      MongoClient(const std::string & host, const std::string & port = "27017", zmq::context_t * ctx = nullptr);
+      MongoClient(zmq::context_t & ctx, const std::string & host, const std::string & port = "27017"):MongoClient(host, port, &ctx) {}
       
       /*!
        * \brief Destructor
@@ -94,7 +94,7 @@ namespace mongo
        * \post creates a connection to the database at the specified host and port
        */
       
-      void connect(const std::string host, const std::string port = "27017");
+      void connect(const std::string & host, const std::string & port = "27017");
       
       // Database Operations (CRUD)
       
@@ -104,8 +104,8 @@ namespace mongo
        * \post Performs a query on the database
        * \return a single matching Document; if no match, returns an empty Document
        */
-      bson::Document findOne(const std::string collection, const bson::Document query = bson::Document(), 
-			     const bson::Document projection = bson::Document(), const int flags = 0,
+      bson::Document findOne(const std::string & collection, const bson::Document & query = bson::Document(), 
+			     const bson::Document & projection = bson::Document(), const int flags = 0,
 			     const int skip = 0);
       
       /*!
@@ -114,8 +114,8 @@ namespace mongo
        * \post Performs a query on the database
        * \return A Cursor object containing the database cursor to get data out of
        */
-      Cursor find(const std::string collection, const bson::Document query = bson::Document(), 
-		  const bson::Document projection = bson::Document(), const int flags = 0,
+      Cursor find(const std::string & collection, const bson::Document & query = bson::Document(), 
+		  const bson::Document & projection = bson::Document(), const int flags = 0,
 		  const int skip = 0);
       
       /*!
@@ -123,7 +123,7 @@ namespace mongo
        * \pre None
        * \post Runs the update operation on the database
        */
-      void update(const std::string collection, const bson::Document selector, const bson::Document update,
+      void update(const std::string & collection, const bson::Document & selector, const bson::Document & update,
 		  const bool upsert = false, const bool multi = false);
       
       /*!
@@ -131,14 +131,14 @@ namespace mongo
        * \pre None
        * \post Inserts the document into the database
        */
-      void insert(const std::string collection, const bson::Document toinsert);
+      void insert(const std::string & collection, const bson::Document & toinsert);
       
       /*!
        * \brief Runs a removal operation on the database
        * \pre None
        * \post Removes the specified selector from the database (defaults to removing a single element)
        */
-      void remove(const std::string collection, const bson::Document selector, const bool rm_one=true);
+      void remove(const std::string & collection, const bson::Document & selector, const bool rm_one=true);
       
       // Database Command functions
       
@@ -148,14 +148,14 @@ namespace mongo
        * \post Runs the database command
        * \return the resulting bson document from running the command
        */
-      bson::Document runCommand(const std::string dbname, const bson::Document cmd);
+      bson::Document runCommand(const std::string & dbname, const bson::Document & cmd);
       /*!
        * \brief runs the specified database command
        * \pre None
        * \post Runs the database command {cmd: args}
        * \return the resulting bson document from running the command
        */
-      bson::Document runCommand(const std::string dbname, const std::string cmd, const bson::Element args = 1) {return runCommand(dbname, {{cmd, args}});}
+      bson::Document runCommand(const std::string & dbname, const std::string & cmd, const bson::Element args = 1) {return runCommand(dbname, {{cmd, args}});}
       
       /*!
        * \brief gets the created context

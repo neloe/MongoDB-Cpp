@@ -32,12 +32,12 @@ namespace mongo
     }
     //m_sock = std::make_shared<zmq::socket_t>(zmq::socket_t(*m_context, ZMQ_STREAM));
   }
-  MongoClient::MongoClient(const std::string host, const std::string port, zmq::context_t* ctx): MongoClient(ctx)
+  MongoClient::MongoClient(const std::string & host, const std::string & port, zmq::context_t* ctx): MongoClient(ctx)
   {
     connect(host, port);
   }
 
-  void MongoClient::connect(const std::string host, const std::string port)
+  void MongoClient::connect(const std::string & host, const std::string & port)
   {
     std::string connstr = "tcp://" + host + ":" + port;
     if (m_socks.count(connstr) == 0)
@@ -124,8 +124,8 @@ namespace mongo
   }
 
   
-  bson::Document MongoClient::findOne(const std::string collection, const bson::Document query, 
-					  const bson::Document projection, const int flags, const int skip)
+  bson::Document MongoClient::findOne(const std::string & collection, const bson::Document & query, 
+					  const bson::Document & projection, const int flags, const int skip)
   {
     std::ostringstream querystream, header;
     bson::Document qd;
@@ -157,8 +157,8 @@ namespace mongo
     
   }
   
-  Cursor MongoClient::find(const std::string collection, const bson::Document query, 
-				   const bson::Document projection, const int flags, const int skip)
+  Cursor MongoClient::find(const std::string & collection, const bson::Document & query, 
+				   const bson::Document & projection, const int flags, const int skip)
   {
     std::ostringstream querystream, header;
     bson::Document qd;
@@ -184,7 +184,7 @@ namespace mongo
     return Cursor(intro.curID, data, intro.head.len - 36, collection, this);
   }
   
-  void MongoClient::update(const std::string collection, const bson::Document selector, const bson::Document update,
+  void MongoClient::update(const std::string & collection, const bson::Document & selector, const bson::Document & update,
 			   const bool upsert, const bool multi)
   {
     std::ostringstream msg, header;
@@ -198,7 +198,7 @@ namespace mongo
     return;
   }
   
-  void MongoClient::insert(const std::string collection, const bson::Document toinsert)
+  void MongoClient::insert(const std::string & collection, const bson::Document & toinsert)
   {
     std::ostringstream msg, header;
     bson::Element::encode(msg, 0);
@@ -208,7 +208,7 @@ namespace mongo
     _msg_send(header.str() + msg.str());
     return;
   }
-  void MongoClient::remove(const std::string collection, const bson::Document selector, const bool rm_one)
+  void MongoClient::remove(const std::string & collection, const bson::Document & selector, const bool rm_one)
   {
     std::ostringstream msg, header;
     bson::Element::encode(msg, 0);
@@ -220,7 +220,7 @@ namespace mongo
     return;
   }
   
-  bson::Document MongoClient::runCommand(const std::string dbname, const bson::Document cmd)
+  bson::Document MongoClient::runCommand(const std::string & dbname, const bson::Document & cmd)
   {
     return findOne(dbname + ".$cmd", cmd);
   }
