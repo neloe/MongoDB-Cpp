@@ -219,4 +219,9 @@ namespace mongo
     _msg_send(header.str() + msg.str());
     return;
   }
+  
+  bson::Document MongoClient::runCommand(const std::string dbname, const bson::Document cmd)
+  {
+    return findOne(dbname + ".$cmd", cmd);
+  }
 }

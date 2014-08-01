@@ -96,7 +96,7 @@ namespace mongo
       
       void connect(const std::string host, const std::string port = "27017");
       
-      // Database Operations
+      // Database Operations (CRUD)
       
       /*!
        * \brief finds and returns a single document
@@ -140,20 +140,37 @@ namespace mongo
        */
       void remove(const std::string collection, const bson::Document selector, const bool rm_one=true);
       
+      // Database Command functions
+      
+      /*!
+       * \brief runs the specified database command
+       * \pre None
+       * \post Runs the database command
+       * \return the resulting bson document from running the command
+       */
+      bson::Document runCommand(const std::string dbname, const bson::Document cmd);
+      /*!
+       * \brief runs the specified database command
+       * \pre None
+       * \post Runs the database command {cmd: args}
+       * \return the resulting bson document from running the command
+       */
+      bson::Document runCommand(const std::string dbname, const std::string cmd, const bson::Element args = 1) {return runCommand(dbname, {{cmd, args}});}
+      
       /*!
        * \brief gets the created context
        * \pre None
        * \post None
        * \return The context used to manage the ZMQ connections
        */
-      static std::shared_ptr<zmq::context_t> get_context() {return m_context;}
+      static std::shared_ptr<zmq::context_t> getContext() {return m_context;}
       
       /*!
        * \brief sets the shared context for the mongo clients
        * \pre None
        * \post Sets the shared static context for the mongo client instances to the supplied context
        */
-      static void set_context(zmq::context_t* ctx) {m_context = std::shared_ptr<zmq::context_t>(ctx);}
-      static void set_context(zmq::context_t& ctx) {m_context = std::shared_ptr<zmq::context_t>(&ctx);}
+      static void setContext(zmq::context_t* ctx) {m_context = std::shared_ptr<zmq::context_t>(ctx);}
+      static void setContext(zmq::context_t& ctx) {m_context = std::shared_ptr<zmq::context_t>(&ctx);}
   };
 }
