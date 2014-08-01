@@ -11,8 +11,6 @@
 #include <string>
 #include <sstream>
 #include <zmq.hpp>
-#include "../bson/template_spec/convert_utils.h"
-#include <iostream>
 
 namespace mongo
 {
@@ -180,8 +178,7 @@ namespace mongo
     _encode_header(header, static_cast<int>(querystream.tellp()), QUERY);
     _msg_send(header.str() + querystream.str());
     _msg_recv(intro, data);
-    std::cout << "docs in reply: " << intro.numRet << std::endl;
-    return Cursor(intro.curID, data, intro.head.len - 36, collection, this);
+    return Cursor(intro.curID, data, intro.head.len - 36, collection, *this);
   }
   
   void MongoClient::update(const std::string & collection, const bson::Document & selector, const bson::Document & update,
