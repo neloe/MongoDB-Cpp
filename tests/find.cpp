@@ -7,53 +7,48 @@
 #include "../connection/mongoclient.h"
 #include "../connection/cursor.h"
 #include "gtest/gtest.h"
+#include "fixture.h"
 #include <iostream>
 
-TEST(Find, FindOneAny)
+TEST_F(MongoDriverTest, FindOneAny)
 {
-  mongo::MongoClient c("localhost");
-  bson::Document d = c.findOne("test.testdata");
+  bson::Document d = c.findOne(COLL);
   ASSERT_NE(0, d.field_names().size());
 }
 
-TEST(Find, FindOneNoExist)
+TEST_F(MongoDriverTest, FindOneNoExist)
 {
-  mongo::MongoClient c("localhost");
-  bson::Document d = c.findOne("test.testdata", {{"A", 1}});
+  bson::Document d = c.findOne(COLL, {{"A", 1}});
   ASSERT_EQ(0, d.field_names().size());
 }
 
-TEST(Find, FindOneFilter)
+TEST_F(MongoDriverTest, FindOneFilter)
 {
-  mongo::MongoClient c("localhost");
-  bson::Document d = c.findOne("test.testdata", {{"a", 1}});
-  ASSERT_EQ(1.0, d["a"].data<int>());
+  bson::Document d = c.findOne(COLL, {{"a", 1}});
+  ASSERT_EQ(1, d["a"].data<int>());
 }
 
-TEST(Find, FindOneProject)
+TEST_F(MongoDriverTest, FindOneProject)
 {
-  mongo::MongoClient c("localhost");
-  bson::Document d = c.findOne("test.testdata", {{"a", 1}}, {{"a", 1}});
+  bson::Document d = c.findOne(COLL, {{"a", 1}}, {{"a", 1}});
   ASSERT_GE(2, d.field_names().size()); //can still have the _id apparently... ugh
-  ASSERT_EQ(1.0, d["a"].data<int>());
+  ASSERT_EQ(1, d["a"].data<int>());
   ASSERT_EQ(1, d.field_names().count("a"));
   ASSERT_EQ(1, d.field_names().count("_id"));
   ASSERT_EQ(0, d.field_names().count("b"));
 }
 
-TEST(Find, FineOneProjectFilter)
+TEST_F(MongoDriverTest, FineOneProjectFilter)
 {
-  mongo::MongoClient c("localhost");
-  bson::Document d = c.findOne("test.testdata", {{"a", 1}}, {{"a", 0}});
+  bson::Document d = c.findOne(COLL, {{"a", 1}}, {{"a", 0}});
   ASSERT_NE(0, d.field_names().size());
   ASSERT_EQ(0, d.field_names().count("a"));
 }
 
-TEST(Find, FindAll)
+TEST_F(MongoDriverTest, FindAll)
 {
   int count = 0;
-  mongo::MongoClient c("localhost");
-  mongo::Cursor curr = c.find("test.testdata");
+  mongo::Cursor curr = c.find(COLL);
   while (curr.more())
   {
     count++;

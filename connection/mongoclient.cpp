@@ -210,8 +210,8 @@ namespace mongo
     std::ostringstream msg, header;
     bson::Element::encode(msg, 0);
     msg << collection.c_str() << bson::X00;
-    bson::Element::encode(msg, selector);
     bson::Element::encode(msg, static_cast<int>(rm_one));
+    bson::Element::encode(msg, selector);
     _encode_header(header, static_cast<int>(msg.tellp()), DELETE);
     _msg_send(header.str() + msg.str());
     return;
