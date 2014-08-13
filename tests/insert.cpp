@@ -14,10 +14,9 @@
 
 TEST_F(MongoDriverTest, InsertOne)
 {
-  srand(std::time(NULL));
-  int thing = rand() % 1000;
-  while (c.findOne(COLL, {{"a", thing}}).field_names().size()!=0)
-    thing = rand() % 1000;
-  c.insert(COLL, {{"a",thing}});
-  ASSERT_NE(0, c.findOne(COLL, {{"a", thing}}).field_names().size());
+  int thing = 0;
+  while (c.findOne(INSCOLL, {{"a", thing}}).field_names().size() != 0)
+    thing ++;
+  c.insert(INSCOLL, {{"a", thing}});
+  ASSERT_NE(0, c.findOne(INSCOLL, {{"a", thing}}).field_names().size());
 }

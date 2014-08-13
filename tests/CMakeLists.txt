@@ -16,7 +16,7 @@ include_directories(..)
 #add files with new test here
 set (test_sources
 find.cpp
-#insert.cpp
+insert.cpp
 #remove.cpp
 #update.cpp
 )
