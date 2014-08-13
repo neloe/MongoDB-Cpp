@@ -60,7 +60,7 @@ TEST_F(MongoDriverTest, FindAll)
     count++;
     curr.next();
   }
-  ASSERT_EQ(4, count);
+  ASSERT_EQ(10004, count);
 }
 
 TEST_F(MongoDriverTest, FindProjectFilter)
