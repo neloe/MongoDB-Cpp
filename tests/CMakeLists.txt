@@ -19,6 +19,7 @@ find.cpp
 insert.cpp
 remove.cpp
 update.cpp
+cmd.cpp
 )
 
 add_executable(drivertests ${test_sources})
