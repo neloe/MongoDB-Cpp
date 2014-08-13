@@ -151,6 +151,8 @@ namespace mongo
       e.decode(data.get(), bson::DOCUMENT);
       result = e.data<bson::Document>();
     }
+    if (intro.curID != 0)
+      _kill_cursor(intro.curID);
     return result;
     
   }

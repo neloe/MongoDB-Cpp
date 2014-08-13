@@ -6,7 +6,7 @@
 const std::string HOST = "localhost";
 const std::string PORT = "27017";
 
-const std::string COLL = "test.testdata";
+const std::string FINDCOLL = "mongo-driver-test.find";
 
 class MongoDriverTest: public ::testing::Test
 {

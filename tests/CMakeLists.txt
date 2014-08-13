@@ -16,9 +16,9 @@ include_directories(..)
 #add files with new test here
 set (test_sources
 find.cpp
-insert.cpp
-remove.cpp
-update.cpp
+#insert.cpp
+#remove.cpp
+#update.cpp
 )
 
 add_executable(drivertests ${test_sources})
