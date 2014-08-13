@@ -14,12 +14,11 @@
 
 TEST_F(MongoDriverTest, RemoveOne)
 {
-  srand(std::time(NULL));
-  int thing = rand() % 1000;
-  while (c.findOne(COLL, {{"a", thing}}).field_names().size()!=0)
-    thing = rand() % 1000;
-  c.insert(COLL, {{"a",thing}});
-  ASSERT_NE(0, c.findOne(COLL, {{"a", thing}}).field_names().size());
-  c.remove(COLL, {{"a", thing}});
-  ASSERT_EQ(0, c.findOne(COLL, {{"a", thing}}).field_names().size());
+  int thing = 0;
+  while (c.findOne(REMCOLL, {{"a", thing}}).field_names().size() != 0)
+    thing ++;
+  c.insert(REMCOLL, {{"a", thing}});
+  ASSERT_NE(0, c.findOne(REMCOLL, {{"a", thing}}).field_names().size());
+  c.remove(REMCOLL, {{"a", thing}});
+  ASSERT_EQ(0, c.findOne(REMCOLL, {{"a", thing}}).field_names().size());
 }

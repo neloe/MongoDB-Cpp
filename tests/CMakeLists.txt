@@ -17,7 +17,7 @@ include_directories(..)
 set (test_sources
 find.cpp
 insert.cpp
-#remove.cpp
+remove.cpp
 #update.cpp
 )
 
