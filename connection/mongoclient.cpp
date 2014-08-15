@@ -98,7 +98,7 @@ namespace mongo
   
   void MongoClient::_encode_header(std::ostringstream&ss, const int size, const int type)
   {
-    bson::Element::encode(ss, size + HEADSIZE);
+    bson::Element::encode(ss, size + HEAD_SIZE);
     bson::Element::encode(ss, m_req_id++);
     bson::Element::encode(ss, 0);
     bson::Element::encode(ss, type);
