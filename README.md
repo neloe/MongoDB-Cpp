@@ -13,11 +13,14 @@ This software uses CMake as it's build system; as such out of source builds are 
 
 You should create a build directory in the source directory and cd to it.
 
-To prepare for release (from the build directory) : `cmake .. && make mongocpp`
+To prepare for release (from the build directory) :
+`cmake .. && make mongocpp`
 
-To run code coverage: `cmake .. -DCMAKE_BUILD_TYPE=Debug && make mongo_coverage`
+To run code coverage:
+`cmake .. -DCMAKE_BUILD_TYPE=Debug && make mongo_coverage`
 
-To generate Cobertura xml output for code coverage: `cmake .. -DCMAKE_BUILD_TYPE=Debug && make mongo_cobertura`
+To generate Cobertura xml output for code coverage:
+`cmake .. -DCMAKE_BUILD_TYPE=Debug && make mongo_cobertura`
 
 ## Progress
 This is an evolving work in progress; it implements the MongoDB wire protocol, and over time will evolve in both ease of use and power.  The checklist at http://docs.mongodb.org/meta-driver/latest/legacy/mongodb-driver-requirements/ is used as a base.
