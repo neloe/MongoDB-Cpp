@@ -16,7 +16,6 @@ namespace mongo
   {
     bson::Element e;
     m_lastpos +=e.decode(m_docs.get() + m_lastpos, bson::DOCUMENT);
-    //std::cout << "in next()" << std::endl;
     if (m_lastpos >= m_strsize && m_id != 0)
     {
       (*m_client)._more_cursor(*this);

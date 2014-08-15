@@ -41,7 +41,7 @@ namespace mongo
        * \brief returns the next document in the resulting set of documents
        * \pre None
        * \post May make a database hit, if necessary (more documents stored on the database)
-       * \return The next document in the resulting tset of docs
+       * \return The next document in the resulting set of docs
        */
       bson::Document next();
   };
