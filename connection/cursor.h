@@ -15,12 +15,17 @@ namespace mongo
     private:
       
       friend class MongoClient;
-      
+      //Cursor ID
       long m_id;
+      //The data to decode
       std::shared_ptr<unsigned char> m_docs;
+      //Keep track of the position in the bytestring
       int m_lastpos, m_strsize;
+      //The name of the collection
       std::string m_coll;
+      //A pointer to a client so additional information can be pulled
       std::shared_ptr<MongoClient> m_client;
+      //Private constructor only to be used by the MongoClient class
       Cursor(const long id, std::shared_ptr<unsigned char> docs, const int ds, const std::string& coll, MongoClient & mc);
     public:
       Cursor() = default;

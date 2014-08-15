@@ -23,16 +23,24 @@ namespace mongo
     private:
       //Internal types and codes
       friend class Cursor;
+      //MongoDB codes
       enum opcodes {REPLY=1, MSG=1000, UPDATE=2001, INSERT, RESERVED, QUERY, GET_MORE, DELETE, KILL_CURSORS};
       struct msg_header {int len, reqID, reTo, opCode;};
       struct reply_pre {msg_header head; int rFlags; long curID; int start, numRet;};
-      const static size_t _ID_MAX_SIZE = 256;
-      static int m_req_id;
-      static std::shared_ptr<zmq::context_t> m_context;
-      static thread_local std::map<std::string, std::shared_ptr<zmq::socket_t>> m_socks;
       
+      //The maximum size a TCP id can have
+      const static size_t _ID_MAX_SIZE = 256;
+      //The current request ID
+      static int m_req_id;
+      //The ZMQ context used for communication
+      static std::shared_ptr<zmq::context_t> m_context;
+      //The connection pool (ZMQ sockets)
+      static thread_local std::map<std::string, std::shared_ptr<zmq::socket_t>> m_socks;
+      //This client's socket
       std::shared_ptr<zmq::socket_t>m_sock;
+      //The id of the server to send to
       char m_id[_ID_MAX_SIZE];
+      //The size of the server's ID
       size_t m_id_size;
       
       /*!
