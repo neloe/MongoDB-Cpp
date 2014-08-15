@@ -18,6 +18,9 @@ namespace mongo
 {
   class Cursor;
   
+  const int HEAD_SIZE = 16;
+  const int REPLYPRE_SIZE = 36;
+  
   class MongoClient
   {
     private:

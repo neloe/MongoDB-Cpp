@@ -67,15 +67,15 @@ namespace mongo
     int consumed, goal, size;
     m_sock->recv(&id);
     m_sock->recv(&reply);
-    memcpy(&(intro.head), (char*)reply.data(), 16);
-    memcpy(&(intro.rFlags), (char*)reply.data() + 16, 4);
-    memcpy(&(intro.curID), (char*)reply.data() + 20, 8);
-    memcpy(&(intro.start), (char*)reply.data() + 28, 4);
-    memcpy(&(intro.numRet), (char*)reply.data() + 32, 4);
-    goal = intro.head.len - 36;
-    docs = std::shared_ptr<unsigned char>(new unsigned char [intro.head.len - 36], []( unsigned char *p ) { delete[] p; });
-    memcpy(docs.get(), (char*)reply.data() + 36, reply.size() - 36);
-    consumed = reply.size() - 36;
+    memcpy(&(intro.head), (char*)reply.data(), HEAD_SIZE);
+    memcpy(&(intro.rFlags), (char*)reply.data() + HEAD_SIZE, sizeof(int));
+    memcpy(&(intro.curID), (char*)reply.data() + HEAD_SIZE + sizeof(int), sizeof(long));
+    memcpy(&(intro.start), (char*)reply.data() + HEAD_SIZE + sizeof(int) + sizeof(long), sizeof(int));
+    memcpy(&(intro.numRet), (char*)reply.data() + HEAD_SIZE + sizeof(int) + sizeof(long)  + sizeof(int), sizeof(int));
+    goal = intro.head.len - REPLYPRE_SIZE;
+    docs = std::shared_ptr<unsigned char>(new unsigned char [intro.head.len - REPLYPRE_SIZE], []( unsigned char *p ) { delete[] p; });
+    memcpy(docs.get(), (char*)reply.data() + REPLYPRE_SIZE, reply.size() - REPLYPRE_SIZE);
+    consumed = reply.size() - REPLYPRE_SIZE;
     while (consumed < goal)
     {
       zmq::message_t intid, intreply;
@@ -89,7 +89,7 @@ namespace mongo
   void MongoClient::_kill_cursor(const long cursorID)
   {
     std::ostringstream kill;
-    _encode_header(kill, 16, KILL_CURSORS);
+    _encode_header(kill, HEAD_SIZE, KILL_CURSORS);
     bson::Element::encode(kill, 0);
     bson::Element::encode(kill, 1);
     bson::Element::encode(kill, cursorID);
@@ -98,7 +98,7 @@ namespace mongo
   
   void MongoClient::_encode_header(std::ostringstream&ss, const int size, const int type)
   {
-    bson::Element::encode(ss, size + 16);
+    bson::Element::encode(ss, size + HEADSIZE);
     bson::Element::encode(ss, m_req_id++);
     bson::Element::encode(ss, 0);
     bson::Element::encode(ss, type);
@@ -116,7 +116,7 @@ namespace mongo
     _msg_send(ss.str());
     _msg_recv(intro, c.m_docs);
     c.m_id = intro.curID;
-    c.m_strsize = intro.head.len - 36;
+    c.m_strsize = intro.head.len - REPLYPRE_SIZE;
     c.m_lastpos = 0;
     return;
   }
@@ -180,7 +180,7 @@ namespace mongo
     _encode_header(header, static_cast<int>(querystream.tellp()), QUERY);
     _msg_send(header.str() + querystream.str());
     _msg_recv(intro, data);
-    return Cursor(intro.curID, data, intro.head.len - 36, collection, *this);
+    return Cursor(intro.curID, data, intro.head.len - REPLYPRE_SIZE, collection, *this);
   }
   
   void MongoClient::update(const std::string & collection, const bson::Document & selector, const bson::Document & update,
