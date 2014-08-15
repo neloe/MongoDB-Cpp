@@ -13,13 +13,8 @@ set (lib_src
      connection/cursor.cpp
      )
 
-set (mongo_src
-     main.cpp)
-
-add_executable(main ${mongo_src})
 add_library(mongocpp ${lib_src})
 
-target_link_libraries(main zmq fastbson mongocpp)
 target_link_libraries(mongocpp zmq fastbson)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules/)
