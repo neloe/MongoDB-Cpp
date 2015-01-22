@@ -1,3 +1,6 @@
 [submodule "bson"]
 	path = bson
 	url = git@github.com:neloe/FastBSON-Cpp.git
+[submodule "tests/gtest"]
+	path = tests/gtest
+	url = git@github.com:neloe/gtest

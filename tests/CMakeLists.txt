@@ -8,7 +8,7 @@ SET(CMAKE_CXX_FLAGS "-std=c++11 -g ${CMAKE_CXX_FLAGS}")
 
 #add gtest
 if (NOT TARGET gtest_main)
-add_subdirectory(gtest-1.7.0)
+add_subdirectory(gtest)
 endif()
 include_directories(${gtest_SOURCE_DIR}/include)
 
