@@ -27,8 +27,8 @@
 #include "fixture.h"
 #include <iostream>
 
-TEST_F(MongoDriverTest, GetLastError)
+TEST_F (MongoDriverTest, GetLastError)
 {
-  bson::Document d = c.runCommand("mongo-driver-test", {{"getLastError", 1}});
-  ASSERT_EQ(6, d.field_names().size());
+    bson::Document d = c.runCommand ("mongo-driver-test", {{"getLastError", 1}});
+    ASSERT_EQ (6, d.field_names().size());
 }

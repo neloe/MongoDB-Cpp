@@ -34,6 +34,6 @@ class MongoDriverTest: public ::testing::Test
     mongo::MongoClient c;
     virtual void SetUp()
     {
-      c.connect(HOST, PORT);
-    }    
+        c.connect (HOST, PORT);
+    }
 };
