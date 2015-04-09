@@ -146,24 +146,15 @@ namespace mongo
                                          const bson::Document &projection, const int flags, const int skip)
     {
         std::ostringstream querystream, header;
-        bson::Document qd;
-        zmq::message_t reply;
-        reply_pre intro;
-        int num_returned;
-        int docsize, headsize;
-        bson::Document result;
         std::shared_ptr<unsigned char> data;
-        qd.add ("$query", query);
-        bson::Element::encode (querystream, flags);
-        querystream << collection.c_str() << bson::X00;
-        bson::Element::encode (querystream, skip);
-        bson::Element::encode (querystream, 1);
-        bson::Element::encode (querystream, qd);
-        if (projection.field_names().size() > 0)
-            bson::Element::encode (querystream, projection);
+        reply_pre intro;
+        bson::Document result;
+        
+        _format_find(collection, query, projection, flags, skip, 1, querystream);
         _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
         _msg_send (header.str() + querystream.str());
         _msg_recv (intro, data);
+        
         if (intro.numRet == 1)
         {
             bson::Element e;
@@ -179,27 +170,35 @@ namespace mongo
                               const bson::Document &projection, const int flags, const int skip)
     {
         std::ostringstream querystream, header;
-        bson::Document qd;
-        zmq::message_t reply;
-        reply_pre intro;
-        int num_returned;
-        int docsize, headsize;
-        bson::Document result;
         std::shared_ptr<unsigned char> data;
-        qd.add ("$query", query);
-        bson::Element::encode (querystream, flags);
-        querystream << collection.c_str() << bson::X00;
-        bson::Element::encode (querystream, skip);
-        bson::Element::encode (querystream, 0);
-        bson::Element::encode (querystream, qd);
-        if (projection.field_names().size() > 0)
-            bson::Element::encode (querystream, projection);
+        reply_pre intro;
+        
+        _format_find(collection, query, projection, flags, skip, 0, querystream);
         _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
         _msg_send (header.str() + querystream.str());
         _msg_recv (intro, data);
         return Cursor (intro.curID, data, intro.head.len - REPLYPRE_SIZE, collection, *this);
     }
 
+    void MongoClient::_format_find(const std::string& collection, const bson::Document& query, 
+                                   const bson::Document& projection, const int flags, const int skip, 
+                                   const int limit, std::ostringstream& querystream)
+    {
+        bson::Document qd;
+        zmq::message_t reply;
+        int num_returned;
+        int docsize, headsize;
+        qd.add ("$query", query);
+        bson::Element::encode (querystream, flags);
+        querystream << collection.c_str() << bson::X00;
+        bson::Element::encode (querystream, skip);
+        bson::Element::encode (querystream, limit);
+        bson::Element::encode (querystream, qd);
+        if (projection.field_names().size() > 0)
+            bson::Element::encode (querystream, projection);
+    }
+
+    
     void MongoClient::update (const std::string &collection, const bson::Document &selector, const bson::Document &update,
                               const bool upsert, const bool multi)
     {

@@ -102,6 +102,14 @@ namespace mongo
          * \post iterates the database cursor
          */
         void _more_cursor (Cursor &c);
+        /*!
+         * \brief the common functionality behind encoding and sending requests
+         * \pre None
+         * \post populates the querystream and header ostringstreams with the header and request
+         */
+        void _format_find(const std::string &collection, const bson::Document &query,
+                          const bson::Document &projection, const int flags,
+                          const int skip, const int limit, std::ostringstream & querystream);
       public:
         /*!
          * \brief Constructors
@@ -156,6 +164,16 @@ namespace mongo
                      const bson::Document &projection = bson::Document(), const int flags = 0,
                      const int skip = 0);
 
+        /*!
+         * \brief dispatches a find operation (for asynchronous use) and returns a request ID
+         * \pre None
+         * \post Sends a find operation mesage to the database
+         * \return the request ID
+         */
+        int dispatch_find(const std::string &collection, const bson::Document &query = bson::Document(),
+                          const bson::Document &projection = bson::Document(), const int flags = 0,
+                          const int skip = 0);
+        
         /*!
          * \brief Runs an update operation on the database
          * \pre None
