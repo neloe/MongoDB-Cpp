@@ -180,6 +180,27 @@ namespace mongo
         return Cursor (intro.curID, data, intro.head.len - REPLYPRE_SIZE, collection, *this);
     }
 
+    int MongoClient::dispatch_find(const std::string& collection, const bson::Document& query, 
+                                   const bson::Document& projection, const int flags, const int skip, const int limit)
+    {
+        std::ostringstream querystream, header;
+        std::shared_ptr<unsigned char> data;
+        reply_pre intro;
+        int mid;
+        _format_find(collection, query, projection, flags, skip, 0, querystream);
+        mid = m_req_id;
+        _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
+        _msg_send (header.str() + querystream.str());
+        return mid;
+    }
+
+    int MongoClient::dispatch_findOne(const std::string& collection, const bson::Document& query, 
+                                      const bson::Document& projection, const int flags, const int skip)
+    {
+        return dispatch_find(collection, query, projection, flags, skip, 1);
+    }
+
+    
     void MongoClient::_format_find(const std::string& collection, const bson::Document& query, 
                                    const bson::Document& projection, const int flags, const int skip, 
                                    const int limit, std::ostringstream& querystream)

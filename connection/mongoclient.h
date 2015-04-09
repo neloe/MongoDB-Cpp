@@ -172,8 +172,11 @@ namespace mongo
          */
         int dispatch_find(const std::string &collection, const bson::Document &query = bson::Document(),
                           const bson::Document &projection = bson::Document(), const int flags = 0,
-                          const int skip = 0);
+                          const int skip = 0, const int limit = 0);
         
+        int dispatch_findOne(const std::string &collection, const bson::Document &query = bson::Document(),
+                             const bson::Document &projection = bson::Document(), const int flags = 0,
+                             const int skip = 0);
         /*!
          * \brief Runs an update operation on the database
          * \pre None
