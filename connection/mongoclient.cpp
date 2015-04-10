@@ -200,6 +200,36 @@ namespace mongo
         return dispatch_find(collection, query, projection, flags, skip, 1);
     }
 
+    int MongoClient::async_recv(bson::Document& result)
+    {
+        reply_pre intro;
+        std::shared_ptr<unsigned char> data;
+        _msg_recv(intro, data);
+        if (intro.numRet == 1)
+        {
+            bson::Element e;
+            e.decode (data.get(), bson::DOCUMENT);
+            e.data(result);
+        }
+        else
+        {
+            Cursor c (intro.curID, data, intro.head.len - REPLYPRE_SIZE, "", *this);
+            if (c.more())
+                result = c.next();
+        }
+        return intro.head.reTo;
+    }
+    
+    int MongoClient::async_recv(Cursor& result)
+    {
+        reply_pre intro;
+        std::shared_ptr<unsigned char> data;
+        _msg_recv(intro, data);
+        result = Cursor (intro.curID, data, intro.head.len - REPLYPRE_SIZE, "", *this);
+        return intro.head.reTo;
+    }
+
+
     
     void MongoClient::_format_find(const std::string& collection, const bson::Document& query, 
                                    const bson::Document& projection, const int flags, const int skip, 

@@ -171,12 +171,21 @@ namespace mongo
          * \return the request ID
          */
         int dispatch_find(const std::string &collection, const bson::Document &query = bson::Document(),
-                          const bson::Document &projection = bson::Document(), const int flags = 0,
-                          const int skip = 0, const int limit = 0);
+                       const bson::Document &projection = bson::Document(), const int flags = 0,
+                       const int skip = 0, const int limit = 0);
         
         int dispatch_findOne(const std::string &collection, const bson::Document &query = bson::Document(),
-                             const bson::Document &projection = bson::Document(), const int flags = 0,
-                             const int skip = 0);
+                          const bson::Document &projection = bson::Document(), const int flags = 0,
+                          const int skip = 0);
+        
+        /*!
+         * \brief recieves a result from a dispatched find or findOne
+         * \pre at least one of the dispatch_* functions has been called
+         * \post recieves a message from the database, and populates the reference parameter.
+         * \return the request ID
+         */
+        int async_recv(bson::Document & result);
+        int async_recv(Cursor & result);
         /*!
          * \brief Runs an update operation on the database
          * \pre None
@@ -218,7 +227,7 @@ namespace mongo
         {
             return runCommand (dbname, {{cmd, args}});
         }
-
+        
         /*!
          * \brief gets the created context
          * \pre None
