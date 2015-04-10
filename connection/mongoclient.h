@@ -229,6 +229,17 @@ namespace mongo
         }
         
         /*!
+         * \brief gets the socket used by this mongo client
+         * \pre connect has been called
+         * \post None
+         * \return a reference to the zmq socket
+         */
+        zmq::socket_t& getSocket()
+        {
+            return *(m_sock.get());
+        }
+        
+        /*!
          * \brief gets the created context
          * \pre None
          * \post None
