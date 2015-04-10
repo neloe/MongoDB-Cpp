@@ -26,6 +26,7 @@
 #include "gtest/gtest.h"
 #include "fixture.h"
 #include <iostream>
+#include <set>
 
 TEST_F (MongoDriverTest, FindOneAny)
 {
@@ -90,4 +91,55 @@ TEST_F (MongoDriverTest, FindProjectFilter)
         curr.next();
     }
     ASSERT_EQ (2, count);
+}
+
+TEST_F (MongoDriverTest, AsyncFindOneTest)
+{
+    std::set<int> dispatched, retrieved;
+    bson::Document d;
+    int id;
+    for (int i=0; i<10; i++)
+    {
+        dispatched.insert(c.dispatch_findOne(FINDCOLL, {{"a", 5}}, {{"a", 1}}));
+        ASSERT_EQ(i+1, dispatched.size());
+    }
+    for (int i=0; i<10; i++)
+    {
+        id = c.async_recv(d);
+        ASSERT_GE (2, d.field_names().size()); //can still have the _id apparently... ugh
+        ASSERT_EQ (5, d["a"].data<int>());
+        ASSERT_EQ (1, d.field_names().count ("a"));
+        ASSERT_EQ (1, d.field_names().count ("_id"));
+        ASSERT_EQ (0, d.field_names().count ("b"));
+        ASSERT_EQ(1, dispatched.count(id));
+        retrieved.insert(id);
+        ASSERT_EQ(i+1, retrieved.size()); 
+    }
+}
+
+TEST_F (MongoDriverTest, AsyncFindTest)
+{
+    std::set<int> dispatched, retrieved;
+    mongo::Cursor curr;
+    int id, count = 0;
+    for (int i=0; i<10; i++)
+    {
+        dispatched.insert(c.dispatch_find(FINDCOLL, {{"a", 5}}, {{"a", 0}}));
+        ASSERT_EQ(i+1, dispatched.size());
+    }
+    for (int i=0; i<10; i++)
+    {
+        count = 0;
+        id = c.async_recv(curr);
+        while (curr.more())
+        {
+            count++;
+            curr.next();
+        }
+        retrieved.insert(id);
+        ASSERT_EQ(i+1, retrieved.size()); 
+        ASSERT_EQ(1, dispatched.count(id));
+        ASSERT_EQ(2, count);
+        
+    }
 }
