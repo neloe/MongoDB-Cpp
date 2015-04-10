@@ -143,3 +143,28 @@ TEST_F (MongoDriverTest, AsyncFindTest)
         
     }
 }
+
+TEST_F (MongoDriverTest, AsyncFindOneTestBackAndForth)
+{
+    std::set<int> dispatched, retrieved;
+    int id;
+    for (int i=0; i<10; i++)
+    {
+        dispatched.insert(c.dispatch_findOne(FINDCOLL, {{"a", 5}}, {{"a", 1}}));
+        ASSERT_EQ(i+1, dispatched.size());
+    }
+    bson::Document d = c.findOne (FINDCOLL, {{"b", 8}});
+    ASSERT_EQ (8, d["b"].data<int>());
+    for (int i=0; i<10; i++)
+    {
+        id = c.async_recv(d);
+        ASSERT_GE (2, d.field_names().size()); //can still have the _id apparently... ugh
+        ASSERT_EQ (5, d["a"].data<int>());
+        ASSERT_EQ (1, d.field_names().count ("a"));
+        ASSERT_EQ (1, d.field_names().count ("_id"));
+        ASSERT_EQ (0, d.field_names().count ("b"));
+        ASSERT_EQ(1, dispatched.count(id));
+        retrieved.insert(id);
+        ASSERT_EQ(i+1, retrieved.size()); 
+    }
+}

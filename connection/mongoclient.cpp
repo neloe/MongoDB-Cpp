@@ -235,6 +235,8 @@ namespace mongo
             if (c.more())
                 result = c.next();
         }
+        if (intro.curID != 0)
+            _kill_cursor (intro.curID);
         return intro.head.reTo;
     }
     
