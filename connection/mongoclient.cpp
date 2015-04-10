@@ -28,6 +28,7 @@
 #include <string>
 #include <sstream>
 #include <zmq.hpp>
+#include <iostream>
 
 namespace mongo
 {
@@ -116,12 +117,14 @@ namespace mongo
         _msg_send (kill.str());
     }
 
-    void MongoClient::_encode_header (std::ostringstream &ss, const int size, const int type)
+    int MongoClient::_encode_header (std::ostringstream &ss, const int size, const int type)
     {
+        int mid = m_req_id++;
         bson::Element::encode (ss, size + HEAD_SIZE);
-        bson::Element::encode (ss, m_req_id++);
+        bson::Element::encode (ss, mid);
         bson::Element::encode (ss, 0);
         bson::Element::encode (ss, type);
+        return mid;
     }
 
     void MongoClient::_more_cursor (Cursor &c)
@@ -141,6 +144,15 @@ namespace mongo
         return;
     }
 
+    void MongoClient::_msg_recv(MongoClient::reply_pre& intro, std::shared_ptr< unsigned char >& docs, const int id)
+    {
+        do
+        {
+            _msg_recv(intro, docs);
+            if (intro.head.reTo != id)
+                m_asyncs.push({intro, docs});
+        } while (intro.head.reTo != id);
+    }
 
     bson::Document MongoClient::findOne (const std::string &collection, const bson::Document &query,
                                          const bson::Document &projection, const int flags, const int skip)
@@ -149,11 +161,11 @@ namespace mongo
         std::shared_ptr<unsigned char> data;
         reply_pre intro;
         bson::Document result;
-        
+        int mid;
         _format_find(collection, query, projection, flags, skip, 1, querystream);
-        _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
+        mid = _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
         _msg_send (header.str() + querystream.str());
-        _msg_recv (intro, data);
+        _msg_recv (intro, data, mid);
         
         if (intro.numRet == 1)
         {
@@ -172,9 +184,9 @@ namespace mongo
         std::ostringstream querystream, header;
         std::shared_ptr<unsigned char> data;
         reply_pre intro;
-        
+        int mid;
         _format_find(collection, query, projection, flags, skip, 0, querystream);
-        _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
+        mid = _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
         _msg_send (header.str() + querystream.str());
         _msg_recv (intro, data);
         return Cursor (intro.curID, data, intro.head.len - REPLYPRE_SIZE, collection, *this);
@@ -188,8 +200,7 @@ namespace mongo
         reply_pre intro;
         int mid;
         _format_find(collection, query, projection, flags, skip, 0, querystream);
-        mid = m_req_id;
-        _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
+        mid = _encode_header (header, static_cast<int> (querystream.tellp()), QUERY);
         _msg_send (header.str() + querystream.str());
         return mid;
     }
@@ -204,7 +215,14 @@ namespace mongo
     {
         reply_pre intro;
         std::shared_ptr<unsigned char> data;
-        _msg_recv(intro, data);
+        if (m_asyncs.size())
+        {
+            intro = m_asyncs.front().intro;
+            data = m_asyncs.front().data;
+            m_asyncs.pop();
+        }
+        else 
+            _msg_recv(intro, data);
         if (intro.numRet == 1)
         {
             bson::Element e;

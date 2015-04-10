@@ -25,6 +25,8 @@
 #include <memory>
 #include <string>
 #include <zmq.hpp>
+#include <queue>
+#include <utility>
 
 #include "../bson/document.h"
 #include "../bson/element.h"
@@ -56,6 +58,11 @@ namespace mongo
             long curID;
             int start, numRet;
         };
+        struct async_reply
+        {
+            reply_pre intro;
+            std::shared_ptr<unsigned char> data;
+        };
 
         //The maximum size a TCP id can have
         const static size_t _ID_MAX_SIZE = 256;
@@ -71,6 +78,8 @@ namespace mongo
         char m_id[_ID_MAX_SIZE];
         //The size of the server's ID
         size_t m_id_size;
+        //backed up asynchronous requests
+        std::queue <async_reply> m_asyncs;
 
         /*!
          * \brief sends a message over the zmq socket (abstracts the messiness caused by using ZMQ_STREAM
@@ -85,6 +94,13 @@ namespace mongo
          */
         void _msg_recv (reply_pre &intro, std::shared_ptr<unsigned char> &docs);
         /*!
+         * \brief receives messages from the zmq socket (handles multiple frames) until we get the response to
+         *        the specified message id
+         * \pre The internal zmq socket should be connected to a database and be expecting a response
+         * \post A (possibly multi-framed) message is received and stored in the array of unsigned characters
+         */
+        void _msg_recv (reply_pre &intro, std::shared_ptr<unsigned char> &docs, const int id);
+        /*!
          * \brief Kills a database cursor
          * \pre The internal zmq socket should be connected to a database
          * \post sends the kill cursor message to the connected database
@@ -94,8 +110,9 @@ namespace mongo
          * \brief encodes the common message header
          * \pre None
          * \post the message header is encoded in the output string stream
+         * \return the message id
          */
-        void _encode_header (std::ostringstream &ss, const int size, const int type);
+        int _encode_header (std::ostringstream &ss, const int size, const int type);
         /*!
          * \brief gets more information for the cursor to load
          * \pre this connection should be the same one that created the cursor (same host/port pair)
