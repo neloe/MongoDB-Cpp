@@ -27,6 +27,7 @@
 #include <zmq.hpp>
 #include <queue>
 #include <utility>
+#include <unordered_map>
 
 #include "../bson/document.h"
 #include "../bson/element.h"
@@ -71,7 +72,7 @@ namespace mongo
         //The ZMQ context used for communication
         static std::shared_ptr<zmq::context_t> m_context;
         //The connection pool (ZMQ sockets)
-        static thread_local std::map<std::string, std::shared_ptr<zmq::socket_t>> m_socks;
+        static thread_local std::unordered_map<std::string, std::shared_ptr<zmq::socket_t>> m_socks;
         //This client's socket
         std::shared_ptr<zmq::socket_t>m_sock;
         //The id of the server to send to

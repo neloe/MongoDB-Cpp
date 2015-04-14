@@ -35,7 +35,7 @@ namespace mongo
     int MongoClient::m_req_id = 1;
     std::shared_ptr<zmq::context_t> MongoClient::m_context = nullptr;
 
-    thread_local std::map<std::string, std::shared_ptr<zmq::socket_t>> MongoClient::m_socks;
+    thread_local std::unordered_map<std::string, std::shared_ptr<zmq::socket_t>> MongoClient::m_socks;
 
     MongoClient::MongoClient (zmq::context_t *ctx): m_sock (nullptr)
     {
