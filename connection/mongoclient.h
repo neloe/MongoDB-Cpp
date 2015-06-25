@@ -128,6 +128,15 @@ namespace mongo
         void _format_find(const std::string &collection, const bson::Document &query,
                           const bson::Document &projection, const int flags,
                           const int skip, const int limit, std::ostringstream & querystream);
+        
+        /*!
+         * \brief gets an ack (go go gadget write concern
+         * \pre None
+         * \post Hits the database with a get last error
+         * \return the resulting document
+         */
+        
+        bson::Document _get_ack(const std::string & collection, const int timeout);
       public:
         /*!
          * \brief Constructors
@@ -208,16 +217,18 @@ namespace mongo
          * \brief Runs an update operation on the database
          * \pre None
          * \post Runs the update operation on the database
+         * \return false if timeout reached, true otherwise
          */
-        void update (const std::string &collection, const bson::Document &selector, const bson::Document &update,
-                     const bool upsert = false, const bool multi = false);
+        bool update (const std::string &collection, const bson::Document &selector, const bson::Document &update,
+                     const bool upsert = false, const bool multi = false, const int timeout = 1000);
 
         /*!
          * \brief Runs an insertion operation on the database
          * \pre None
          * \post Inserts the document into the database
+         * \return false if timeout reached, true otherwise
          */
-        void insert (const std::string &collection, const bson::Document &toinsert);
+        bool insert (const std::string &collection, const bson::Document &toinsert, const int timeout = 1000);
 
         /*!
          * \brief Runs a removal operation on the database

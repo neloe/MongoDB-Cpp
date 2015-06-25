@@ -40,7 +40,7 @@ TEST_F (MongoDriverTest, Update)
     oldthing = thing;
     while (c.findOne (UPDCOLL, {{"a", thing}}).field_names().size() != 0)
     thing++;
-    c.update (UPDCOLL, {{"a", oldthing}}, {{"a", thing}});
+    ASSERT_TRUE(c.update (UPDCOLL, {{"a", oldthing}}, {{"a", thing}}));
     ASSERT_EQ (0, c.findOne (UPDCOLL, {{"a", oldthing}}).field_names().size());
     ASSERT_NE (0, c.findOne (UPDCOLL, {{"a", thing}}).field_names().size());
 }

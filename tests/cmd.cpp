@@ -30,5 +30,6 @@
 TEST_F (MongoDriverTest, GetLastError)
 {
     bson::Document d = c.runCommand ("mongo-driver-test", {{"getLastError", 1}});
+    std::cout << d << std::endl;
     ASSERT_EQ (6, d.field_names().size());
 }

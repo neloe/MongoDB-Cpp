@@ -30,6 +30,7 @@
 
 TEST_F (MongoDriverTest, FindOneAny)
 {
+    //std::cout << FINDCOLL << std::endl;
     bson::Document d = c.findOne (FINDCOLL);
     ASSERT_NE (0, d.field_names().size());
 }

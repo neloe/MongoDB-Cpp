@@ -270,8 +270,8 @@ namespace mongo
     }
 
     
-    void MongoClient::update (const std::string &collection, const bson::Document &selector, const bson::Document &update,
-                              const bool upsert, const bool multi)
+    bool MongoClient::update (const std::string &collection, const bson::Document &selector, const bson::Document &update,
+                              const bool upsert, const bool multi, const int timeout)
     {
         std::ostringstream msg, header;
         bson::Element::encode (msg, 0);
@@ -281,10 +281,12 @@ namespace mongo
         bson::Element::encode (msg, update);
         _encode_header (header, static_cast<int> (msg.tellp()), UPDATE);
         _msg_send (header.str() + msg.str());
-        return;
+        // try to get ack?
+        bson::Document ack = _get_ack(collection, timeout);
+        return ack.field_names().count("wtimeout") == 0 || ack["wtimeout"].data<bool>() == false;
     }
 
-    void MongoClient::insert (const std::string &collection, const bson::Document &toinsert)
+    bool MongoClient::insert (const std::string &collection, const bson::Document &toinsert, const int timeout)
     {
         std::ostringstream msg, header;
         bson::Element::encode (msg, 0);
@@ -292,8 +294,16 @@ namespace mongo
         bson::Element::encode (msg, toinsert);
         _encode_header (header, static_cast<int> (msg.tellp()), INSERT);
         _msg_send (header.str() + msg.str());
-        return;
+        bson::Document ack = _get_ack(collection, timeout);
+        return ack.field_names().count("wtimeout") == 0 || ack["wtimeout"].data<bool>() == false;;
     }
+    
+    bson::Document MongoClient::_get_ack(const std::string & collection, const int timeout)
+    {
+        std::string db = collection.substr(0, collection.find("."));
+        return runCommand(db, {{"getLastError", 1}, {"w", 1}, {"wtimeout", timeout}});
+    }
+
     void MongoClient::remove (const std::string &collection, const bson::Document &selector, const bool rm_one)
     {
         std::ostringstream msg, header;
