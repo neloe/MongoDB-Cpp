@@ -27,34 +27,41 @@
 #include <memory>
 #include <string>
 #include <sstream>
-#include <zmq.hpp>
 #include <iostream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h> 
+#include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
+#include <cstring>
 
 namespace mongo
 {
     int MongoClient::m_req_id = 1;
-    std::shared_ptr<zmq::context_t> MongoClient::m_context = nullptr;
 
-    thread_local std::unordered_map<std::string, std::shared_ptr<zmq::socket_t>> MongoClient::m_socks;
+    thread_local std::unordered_map<std::string, int> MongoClient::m_socks;
 
-    MongoClient::MongoClient (zmq::context_t *ctx): m_sock (nullptr)
-    {
-        if (m_context == nullptr)
-        {
-            if (ctx != nullptr)
-                m_context = std::shared_ptr<zmq::context_t> (ctx);
-            else
-                m_context = std::make_shared<zmq::context_t> (zmq::context_t (1));
-        }
-        //m_sock = std::make_shared<zmq::socket_t>(zmq::socket_t(*m_context, ZMQ_STREAM));
-    }
-    MongoClient::MongoClient (const std::string &host, const std::string &port, zmq::context_t *ctx): MongoClient (ctx)
+    MongoClient::MongoClient (): m_sock (-1) {}
+    MongoClient::MongoClient (const std::string &host, const int port)
     {
         connect (host, port);
     }
 
-    void MongoClient::connect (const std::string &host, const std::string &port)
+    void MongoClient::connect (const std::string &host, const int port)
     {
+        m_sock = socket(AF_INET, SOCK_STREAM, 0);
+        struct hostent * server = gethostbyname(host.c_str());
+        struct sockaddr_in serv_addr;
+        bzero((char *) &serv_addr, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        bcopy((char *)server->h_addr, 
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+        serv_addr.sin_port = htons(port);
+        ::connect(m_sock,(struct sockaddr *) &serv_addr,sizeof(serv_addr));
+        /*
         std::string connstr = "tcp://" + host + ":" + port;
         if (m_socks.count (connstr) == 0)
         {
@@ -63,7 +70,7 @@ namespace mongo
         }
         m_sock = m_socks[connstr];
         m_id_size = _ID_MAX_SIZE;
-        m_sock->getsockopt (ZMQ_IDENTITY, m_id, &m_id_size);
+        m_sock->getsockopt (ZMQ_IDENTITY, m_id, &m_id_size);*/
         return;
     }
 
@@ -73,37 +80,42 @@ namespace mongo
 
     void MongoClient::_msg_send (std::string message)
     {
-        zmq::message_t send (message.size());
+        ::write(m_sock, message.c_str(), message.size());
+        /*zmq::message_t send (message.size());
         std::memcpy ((void *)send.data(), message.c_str(), message.size());
         m_sock->send (m_id, m_id_size, ZMQ_SNDMORE);
-        m_sock->send (send, ZMQ_SNDMORE);
+        m_sock->send (send, ZMQ_SNDMORE);*/
     }
     void MongoClient::_msg_recv (reply_pre &intro, std::shared_ptr<unsigned char> &docs)
     {
-        zmq::message_t id, reply;
+        //zmq::message_t id, reply;
         int consumed, goal, size;
-        m_sock->recv (&id);
-        m_sock->recv (&reply);
-        memcpy (& (intro.head), (char *)reply.data(), HEAD_SIZE);
+        //m_sock->recv (&id);
+        //m_sock->recv (&reply);
+        ::read(m_sock, (void*) &intro, REPLYPRE_SIZE);
+        /*memcpy (& (intro.head), (char *)reply.data(), HEAD_SIZE);
         memcpy (& (intro.rFlags), (char *)reply.data() + HEAD_SIZE, sizeof (int));
         memcpy (& (intro.curID), (char *)reply.data() + HEAD_SIZE + sizeof (int), sizeof (long));
         memcpy (& (intro.start), (char *)reply.data() + HEAD_SIZE + sizeof (int) + sizeof (long), sizeof (int));
         memcpy (& (intro.numRet), (char *)reply.data() + HEAD_SIZE + sizeof (int) + sizeof (long)  + sizeof (int),
-                sizeof (int));
+                sizeof (int));*/
         goal = intro.head.len - REPLYPRE_SIZE;
+        
         docs = std::shared_ptr<unsigned char> (new unsigned char [intro.head.len - REPLYPRE_SIZE], [] (unsigned char *p)
         {
             delete[] p;
         });
-        memcpy (docs.get(), (char *)reply.data() + REPLYPRE_SIZE, reply.size() - REPLYPRE_SIZE);
-        consumed = reply.size() - REPLYPRE_SIZE;
+        //read(m_sock, (void*) docs.get(), goal);
+        //memcpy (docs.get(), (char *)reply.data() + REPLYPRE_SIZE, reply.size() - REPLYPRE_SIZE);
+        consumed = REPLYPRE_SIZE;
         while (consumed < goal)
         {
-            zmq::message_t intid, intreply;
+            consumed += read(m_sock, (void*) docs.get(), goal - consumed);
+            /*zmq::message_t intid, intreply;
             m_sock->recv (&intid);
             m_sock->recv (&intreply);
             memcpy (docs.get() + consumed, (char *)intreply.data(), std::min (static_cast<int> (intreply.size()), goal - consumed));
-            consumed += std::min (static_cast<int> (intreply.size()), goal - consumed);
+            consumed += std::min (static_cast<int> (intreply.size()), goal - consumed);*/
         }
         return;
     }
@@ -256,7 +268,7 @@ namespace mongo
                                    const int limit, std::ostringstream& querystream)
     {
         bson::Document qd;
-        zmq::message_t reply;
+        //zmq::message_t reply;
         int num_returned;
         int docsize, headsize;
         qd.add ("$query", query);

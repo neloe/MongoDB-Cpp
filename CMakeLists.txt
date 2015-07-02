@@ -16,7 +16,7 @@ set (lib_src
 
 add_library(mongocpp ${lib_src})
 
-target_link_libraries(mongocpp zmq fastbson)
+target_link_libraries(mongocpp fastbson)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules/)
 if (CMAKE_BUILD_TYPE MATCHES Debug)

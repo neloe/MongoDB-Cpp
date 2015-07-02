@@ -21,7 +21,7 @@
 #include "../connection/mongoclient.h"
 
 const std::string HOST = "localhost";
-const std::string PORT = "27017";
+const int PORT = 27017;
 
 const std::string FINDCOLL = "mongo-driver-test.find";
 const std::string INSCOLL  = "mongo-driver-test.insert";

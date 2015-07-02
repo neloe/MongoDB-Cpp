@@ -41,7 +41,7 @@ TEST_F (MongoDriverTest, InsertOne)
 TEST_F (MongoDriverTest, InsertOneNewConstructor)
 {
     int thing = 0;
-    mongo::MongoClient c2 (HOST, PORT, c.getContext().get());
+    mongo::MongoClient c2 (HOST, PORT);
     while (c2.findOne (INSCOLL, {{"a", thing}}).field_names().size() != 0)
     thing ++;
     ASSERT_TRUE(c2.insert (INSCOLL, {{"a", thing}}));

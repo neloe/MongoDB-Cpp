@@ -24,10 +24,10 @@
 #pragma once
 #include <memory>
 #include <string>
-#include <zmq.hpp>
 #include <queue>
 #include <utility>
 #include <unordered_map>
+#include <sys/socket.h>
 
 #include "../bson/document.h"
 #include "../bson/element.h"
@@ -69,12 +69,10 @@ namespace mongo
         const static size_t _ID_MAX_SIZE = 256;
         //The current request ID
         static int m_req_id;
-        //The ZMQ context used for communication
-        static std::shared_ptr<zmq::context_t> m_context;
-        //The connection pool (ZMQ sockets)
-        static thread_local std::unordered_map<std::string, std::shared_ptr<zmq::socket_t>> m_socks;
+        //The connection pool (BSD sockets)
+        static thread_local std::unordered_map<std::string, int> m_socks;
         //This client's socket
-        std::shared_ptr<zmq::socket_t>m_sock;
+        int m_sock;
         //The id of the server to send to
         char m_id[_ID_MAX_SIZE];
         //The size of the server's ID
@@ -83,27 +81,27 @@ namespace mongo
         std::queue <async_reply> m_asyncs;
 
         /*!
-         * \brief sends a message over the zmq socket (abstracts the messiness caused by using ZMQ_STREAM
-         * \pre The internal zmq socket should be connected to a database
-         * \post The message is sent over the internal zmq socket
+         * \brief sends a message over the  socket (abstracts the messiness caused by using ZMQ_STREAM
+         * \pre The internal socket should be connected to a database
+         * \post The message is sent over the internal socket
          */
         void _msg_send (std::string message);
         /*!
-         * \brief receives a message from the zmq socket (handles multiple frames)
-         * \pre The internal zmq socket should be connected to a database and be expecting a response
+         * \brief receives a message from the  socket (handles multiple frames)
+         * \pre The internal  socket should be connected to a database and be expecting a response
          * \post A (possibly multi-framed) message is received and stored in the array of unsigned characters
          */
         void _msg_recv (reply_pre &intro, std::shared_ptr<unsigned char> &docs);
         /*!
-         * \brief receives messages from the zmq socket (handles multiple frames) until we get the response to
+         * \brief receives messages from the  socket (handles multiple frames) until we get the response to
          *        the specified message id
-         * \pre The internal zmq socket should be connected to a database and be expecting a response
+         * \pre The internal  socket should be connected to a database and be expecting a response
          * \post A (possibly multi-framed) message is received and stored in the array of unsigned characters
          */
         void _msg_recv (reply_pre &intro, std::shared_ptr<unsigned char> &docs, const int id);
         /*!
          * \brief Kills a database cursor
-         * \pre The internal zmq socket should be connected to a database
+         * \pre The internal  socket should be connected to a database
          * \post sends the kill cursor message to the connected database
          */
         void _kill_cursor (const long cursorID);
@@ -141,18 +139,15 @@ namespace mongo
         /*!
          * \brief Constructors
          * \pre The context should be passed if it has been created for other ZMQ sockets
-         * \post The client is constructed using the context specified.  If *ctx == nullptr, creates a new zmq context
+         * \post The client is initialized
          */
-        MongoClient (zmq::context_t *ctx = nullptr);
-        MongoClient (zmq::context_t &ctx): MongoClient (&ctx) {}
+        MongoClient ();
         /*!
          * \brief Connection Constructors
          * \pre None
          * \post constructs the client object and connects to the database
          */
-        MongoClient (const std::string &host, const std::string &port = "27017", zmq::context_t *ctx = nullptr);
-        MongoClient (zmq::context_t &ctx, const std::string &host, const std::string &port = "27017"): MongoClient (host, port,
-                    &ctx) {}
+        MongoClient (const std::string& host, const int port);
 
         /*!
          * \brief Destructor
@@ -167,7 +162,7 @@ namespace mongo
          * \post creates a connection to the database at the specified host and port
          */
 
-        void connect (const std::string &host, const std::string &port = "27017");
+        void connect (const std::string& host, const int port);
 
         // Database Operations (CRUD)
 
@@ -255,42 +250,6 @@ namespace mongo
         bson::Document runCommand (const std::string &dbname, const std::string &cmd, const bson::Element args = 1)
         {
             return runCommand (dbname, {{cmd, args}});
-        }
-        
-        /*!
-         * \brief gets the socket used by this mongo client
-         * \pre connect has been called
-         * \post None
-         * \return a reference to the zmq socket
-         */
-        zmq::socket_t& getSocket()
-        {
-            return *(m_sock.get());
-        }
-        
-        /*!
-         * \brief gets the created context
-         * \pre None
-         * \post None
-         * \return The context used to manage the ZMQ connections
-         */
-        static std::shared_ptr<zmq::context_t> getContext()
-        {
-            return m_context;
-        }
-
-        /*!
-         * \brief sets the shared context for the mongo clients
-         * \pre None
-         * \post Sets the shared static context for the mongo client instances to the supplied context
-         */
-        static void setContext (zmq::context_t *ctx)
-        {
-            m_context = std::shared_ptr<zmq::context_t> (ctx);
-        }
-        static void setContext (zmq::context_t &ctx)
-        {
-            m_context = std::shared_ptr<zmq::context_t> (&ctx);
         }
     };
 }
