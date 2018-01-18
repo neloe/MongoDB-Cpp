@@ -7,7 +7,7 @@ A replacement for the mongo-cxx-driver that focuses on memory safety, speed, and
 This database driver requires the ZMQ libraries (and associated dependencies) and FastBSON. Build system requirements are CMake and a modern C++ compiler that is C++11 compliant.
 
 ## Build Instructions
-
+When the test directories are submodules linking to other repositories.  In order to have all the required files needed to build the tests, make sure you initialize the submodules: `git submodule update --init --recursive` (or clone recursively).
 
 This software uses CMake as it's build system; as such out of source builds are preferred.
 
